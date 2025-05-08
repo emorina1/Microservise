@@ -1,0 +1,68 @@
+Microservices (Mikro-shërbimet) janë një stil arkitekturor ku aplikacioni ndahet në shërbime të pavarura, ku secili shërbim:
+
+ka funksionalitetin e vet (p.sh. menaxhon përdoruesit, produktet, pagesat, etj.),
+
+zhvillohet, testohet dhe ekzekutohet në mënyrë të pavarur,
+
+komunikon me të tjerët përmes API-ve (zakonisht REST ose me gateway).
+
+GATEWAY/
+Është hyrja kryesore për klientin.
+
+Ai merr kërkesat dhe i dërgon në mikroservicat përkatëse (user-service, product-service, etj.).
+
+Mund të përdorësh Express.js dhe ndoshta http-proxy-middleware për me i rutuar kërkesat.
+
+Është si një "roje dere" për aplikacionin tënd.
+
+USER-SERVICE/
+Menaxhon përdoruesit: regjistrimi, login, profile, etj.
+
+Ka index.js që i definon API endpoint-et për përdoruesin.
+
+Mund të lidhet me një database (p.sh. MongoDB, MySQL).
+
+PRODUCT-SERVICE/
+
+Edhe ky ka index.js dhe mund të ketë databazën e vet.
+
+DOCKER
+ shërben për me përgatit, paketuar dhe ekzekutu aplikacione në mënyrë të lehtë dhe të qëndrueshme, pa marrë parasysh ku po i ekzekuton (në kompjuterin tënd, në server, apo në cloud).
+ Me Docker:
+
+Krijon një Dockerfile, ku përshkruan çka të duhet (p.sh. node:14).
+
+Docker e paketon krejt aplikacionin me varësitë e veta.
+
+Mund ta ekzekutosh në çdo kompjuter që ka Docker të instaluar, dhe do të funksionojë njëjtë.
+Rreshti	Përshkrimi
+FROM node:14	Merr një imazh të Node.js version 14
+WORKDIR /app	Vendos direktorinë e punës në /app
+COPY package*.json ./	Kopjon package.json dhe package-lock.json në konteiner
+RUN npm install	Instalon të gjitha paketat e nevojshme
+COPY . .	Kopjon krejt dosjet e projektit në /app
+EXPOSE 3001	E hap portin 3001 në konteiner
+CMD ["node", "index.js"]	E starton aplikacionin me komandën node index.js
+
+ Në secilin shërbim mund të përdorësh porte të ndryshme: 3001 për user, 3002 për product, 3000 për gateway.
+ docker-compose.yml që bashkon gateway, user-service dhe product-service
+ version: '3.8'
+
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - user-service
+      - product-service
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "3001:3001"
+
+  product-service:
+    build: ./product-service
+    ports:
+      - "3002:3002"
